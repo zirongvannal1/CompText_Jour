@@ -1,0 +1,164 @@
+---
+title: "Metadata"
+author: "Wells"
+date: "2026-09-15"
+output: html_document
+---
+
+Class exercise to import your project metadata from the spreadsheet into R 
+
+--Create a folder called "class_project" in your code folder 
+
+--Save this file to the "class_project" folder 
+
+--Move your Nexis spreadsheet to the folder 
+
+--Create a project file on R Studio: File \| New Project \| \*\*\* select Existing folder \| "class_project" 
+
+--After project.Rproj launches, then launch this file, metadata.Rmd, and complete the tutorial
+
+**By doing this, you avoid the ring of hell where R can't find your data**
+
+#load tidyverse, janitor, rio
+
+```{r}
+
+library(tidyverse)
+library(janitor)
+library(rio)
+#install.packages("readxl")
+library(readxl)
+
+```
+
+#Import your data
+
+```{r}
+
+data <- read_excel("AI_and_Healthsource.XLSX") |> 
+  clean_names()
+View(data)
+
+```
+
+# Clean names
+
+```{r}
+data <- data |> 
+  clean_names()
+names(data)
+```
+
+# check data types
+```{r}
+glimpse(data)
+```
+
+#clean up the data, as there are many empty and useless columns
+```{r}
+meta100 <- data |>
+  transmute(
+    id          = sprintf("A%03d", row_number()),
+    title       = str_squish(title),
+    date        = as_date(published_date),
+    publication = str_squish(publication_4),
+    pub_type    = str_squish(publication_type_5),
+    word_count  = as.integer(word_count),
+    section     = str_squish(section),
+    byline      = str_squish(byline),
+    company_tag = str_squish(company),
+    hlead       = str_squish(hlead)
+  )
+
+head(meta100)
+
+```
+
+#save the new metadata excel
+```{r}
+write_xlsx(meta100, "pilot100_metadata.xlsx")
+```
+
+
+Next Steps: Count years, and create a ggplot
+
+# Transform date into years. See tutorial
+```{r}
+
+meta100 <- meta100 |> 
+  mutate(year = year(date))
+
+```
+
+#publication
+```{r}
+
+meta100 |> 
+  count(publication) |>
+  arrange(desc(n))
+
+```
+
+#filter on length
+```{r}
+
+meta100 |> 
+  mutate(length = as.numeric(word_count)) |> 
+  filter(length > 800)
+
+```
+
+# Create a ggplot
+```{r}
+
+meta100 |> 
+  count(year) |> 
+   ggplot(aes(x = year, y = n,
+             fill = n)) +
+  geom_col(position = "dodge") + 
+  theme(legend.position = "none") +
+  scale_x_continuous(breaks=c(2022:2026)) + #fixes wonky x axis
+  labs(title = "Years for News Discourse about AI as Health Source Research",
+       subtitle = "Limited NexisUni Run",
+       caption = "Graphic by Rob Wells, 9-15-2026",
+       y="Number of Articles",
+       x="")
+
+#I extracted evenly for each year, so group by year doesn't work for me
+
+```
+
+#Count publications
+
+```{r}
+meta100 |> 
+  count(publication) |>
+  arrange(desc(n))
+```
+
+
+#Visualize publications
+
+```{r}
+meta100 |> 
+  count(publication) |> 
+   ggplot(aes(x = n, y = reorder(publication, n), #change the direction of bars and set the order
+             fill = n)) +
+  geom_col(position = "dodge") + 
+  theme(legend.position = "none") +
+  labs(title = "Publications for News Discourse about AI as Health Source Research",
+       subtitle = "Limited NexisUni Run",
+       caption = "Graphic by Rob Wells, 9-15-2026",
+       y="Number of Articles",
+       x="Publications")
+
+```
+
+
+
+# NOTES ON FIXING COMPLEX Date COLUMN WITH HOURS AND MINUTES
+
+```{r}
+women <- women |> 
+  mutate(date = as.Date(strptime(published_date, format = "%B %d, %Y %A")))
+```
