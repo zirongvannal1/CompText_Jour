@@ -1,0 +1,551 @@
+---
+output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+::: {style="text-align: center; color: #337DFF;"}
+# Data Gathering & Cleaning
+:::
+
+::: {style="text-align: center;"}
+<img src="./assets/images/merrill-logo-dark.png" width="300" height="50"/>
+:::
+
+```         
+Rob Wells, Ph.D.
+Philip Merrill College of Journalism
+University of Maryland
+robwells@umd.edu
+LinkedIn: https://www.linkedin.com/in/rob-wells-7929329/ 
+ver. 9/3/2026 
+```
+
+<br>
+
+## Learning Goals
+
+```         
+Use techniques to clean and structure data for analysis 
+```
+
+<br> <br>
+
+```{r include=FALSE}
+#background on tidyverse: https://www.tidyverse.org/packages/
+# install.packages("formattable")
+#install.packages("janitor")
+#install.packages("tidyverse")
+
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(tidyr)
+```
+
+## Analysis of San Francisco Police Calls for Service Data
+
+Here is [the original dataset: 5.9 million
+records](https://data.sfgov.org/Public-Safety/Police-Department-Calls-for-Service/hz9m-tj6z/data)
+
+[**Access the API**](https://datasf.org/opendata/developers/)
+
+**Load Data**
+
+```{r}
+SF <- rio::import("https://docs.google.com/spreadsheets/d/1-nkosLJKkfeLSl-UG82DDyiEw5-62kX2alS6ICG9iuk/edit#gid=552005485", sheet = "SF Police_Department_Calls_for_") 
+```
+
+**Clean column names, Process dates**
+
+```{r}
+#This cleans column names
+SF <- clean_names(SF)
+names(SF)
+```
+
+
+```{r}
+#This processes dates for analysis, rearranges columns
+SF <- SF |> 
+  mutate(call_date2 = mdy(call_date),
+         year = year(call_date2)) |> 
+  select(crime_id, original_crime_type_name, call_date2, year, call_date_time, disposition, address, city, state, everything())
+
+```
+
+### Cleaning Dispositions
+
+**Total by disposition: Count**
+
+```{r}
+
+#put the count total in an object called Action
+Action <- SF |> 
+  count(disposition) |> 
+  arrange(n)
+
+Action |> 
+  arrange(desc(n))
+
+```
+
+**Decode Police Radio Codes**
+
+**A guide to what these disposition codes mean**
+
+```{r}
+copspeak <- rio::import("https://docs.google.com/spreadsheets/d/1l86DSZ5LWxlXTliXu06Iai0DiYXlJE4hUYBeddL0XXg/edit#gid=554934632", sheet ="RadioCodes")
+head(copspeak)
+
+#HAN = Handled
+#ADV = Advised
+#GOA = Gone on arrival
+```
+
+
+**Translate Cop Jargon to English**
+
+The disposition column is in cop-speak. We need to clean it up
+
+Step #1: Use mutate to duplicate the column you want to modify
+
+**Mutate command**
+
+```         
+Use **mutate** to create new column(s) in the data, or change existing column(s). 
+
+mutate() adds new variables and preserves existing
+
+Example:
+mtcars <- as.data.frame(mtcars)
+View(mtcars)
+
+mtcars2 <- mtcars |> 
+as_tibble() |> 
+mutate(cyl2 = cyl * 2,
+       cyl4 = cyl2 * 2)
+```
+
+**Mutate example, copying one column to another, renaming it
+```{r}
+SF <- SF %>% 
+  mutate(disposition1 = disposition)
+glimpse(SF)
+```
+
+### Rename specific text strings
+
+Example:
+
+```         
+ str_replace_all(test.vector, pattern=fixed('-'),     replacement=fixed(':') )
+
+
+[Details on string manipulation - follow this link](https://dereksonderegger.github.io/570L/13-string-manipulation.html)
+```
+
+**Use Mutate to Replace ABA with "Abated"**
+
+```{r}
+SF <- SF |> 
+  mutate(disposition1 = case_when(
+    disposition == "ABA" ~ "Abated",
+    disposition == "ADM" ~ "Admonished",
+    TRUE ~ disposition1)
+    )
+```
+
+**Clean disposition types**
+
+case_when searches for an item and transforms the data into a new column
+using mutate
+
+```{r}
+SF <- SF %>%
+   mutate(disposition1 = case_when(
+     str_detect(disposition, "CIT") ~ "Cited",
+     str_detect(disposition, "CRM") ~ "Criminal_Activation",
+     str_detect(disposition, "GOA") ~ "Gone",
+     str_detect(disposition, "HAN") ~ "Handled",
+     str_detect(disposition, "NCR") ~ "No_Criminal",
+     str_detect(disposition, "ND") ~ "No_Dispo",
+     str_detect(disposition, "NOM") ~ "No_Merit",
+     str_detect(disposition, "PAS") ~ "PlaceSecure",
+     str_detect(disposition, "REP") ~ "Report",
+     str_detect(disposition, "SFD") ~ "Medical_staff_engaged",
+     str_detect(disposition, "UTL") ~ "Unfound",
+     str_detect(disposition, "VAS") ~ "Vehicle-Secure",
+     str_detect(disposition, '22') ~ "Cancel",
+     str_detect(disposition, "Not recorded") ~ "NotRecorded",
+     str_detect(disposition, "CAN") ~ "Cancel",
+     str_detect(disposition, "ADV") ~ "Advised",
+     str_detect(disposition, "ARR") ~ "Arrest",
+      TRUE ~ disposition1
+   ))
+```
+
+**Compare our renamed variables to the original disposition**
+
+```{r}
+Action <- SF %>% 
+  count(disposition1, disposition) %>% 
+  arrange(desc(n)) 
+
+head(Action)
+```
+
+### Chart Dispositions
+
+```{r}
+Action %>% 
+  filter(n > 100) %>% 
+  ggplot(aes(x = reorder(disposition1, n), y = n, fill=n)) + 
+  geom_bar(stat = "identity", show.legend = FALSE) +
+  coord_flip() +    #this makes it a horizontal bar chart instead of vertical
+  labs(title = "Actions on Homeless Calls, San Francisco", 
+       subtitle = "SF PD Service Call Data, 3/2016-11/2019",
+       caption = "Graphic by Wells",
+       y="Number of Calls",
+       x="Action")
+```
+
+# Cleaning Crime Data
+
+**Parse out crime type name & tabulate events**
+
+```{r}
+Types <- SF %>% count(original_crime_type_name) %>% 
+  group_by(original_crime_type_name) %>% 
+  arrange(desc(n))
+
+head(Types)
+
+# 915/919
+# 915 Sleeper 
+# Some have commentary
+# 915 Encampment
+```
+
+**Cleaning Sequence**
+
+```{r}
+SF <- SF |> 
+  mutate(crime1 = tolower(original_crime_type_name),
+         crime1 = gsub("/", " ", crime1),
+         crime1 = gsub("'", "", crime1),
+         crime1 = gsub("homeless complaint", "homeless_complaint", crime1)) 
+
+
+SF <- SF %>%
+  separate_wider_delim(
+    cols = crime1,
+    delim = " ",
+    names = c("crime2", "crime3", "crime4"),
+    too_many = "merge",
+    too_few = "align_start"
+  )
+
+```
+
+
+For this lesson, we will clean just one column.
+
+```{r}
+#Clean Crime2
+SF <- SF %>%
+   mutate(crime_cleaned = case_when(
+     str_detect(crime2, '919') ~ "sit_lying",
+     str_detect(crime2, '915') ~ "homeless_complaint",
+     str_detect(crime2, '915s') ~ "homeless_complaint",
+     str_detect(crime2, '915x') ~ "homeless_complaint",  
+     str_detect(crime2, '909') ~ "interview",
+     str_detect(crime2, '902') ~ "aggress_solicit",
+     str_detect(crime2, '811') ~ "intoxicated",
+     str_detect(crime2, '601') ~ "trespasser",     
+     str_detect(crime2, "aggressive") ~ "aggressive",
+     str_detect(crime2, "chop shop") ~ "chop_shop",
+     str_detect(crime2, "dog") ~ "dog",    
+     str_detect(crime2, "drugs") ~ "drugs",    
+     str_detect(crime2, "homeless_complaint") ~ "homeless_complaint",
+     str_detect(crime2, "music") ~ "music",
+     str_detect(crime2, "panhandling") ~ "panhandling",
+     str_detect(crime2, "poss") ~ "possession",
+     str_detect(crime2, "sleep") ~ "sleep",
+     str_detect(crime2, "tent") ~ "tent",
+     TRUE ~ ""
+   ))
+glimpse(SF)
+```
+
+
+**Count crime_cleaned**
+
+```{r}
+#remember this is a partial total
+#arrange the results in descending order
+SF %>%
+  count(crime_cleaned) %>%
+  arrange(desc(n))
+
+#we have 412 missing value — the are rows that crime2 matched nothing. So it is a partial total
+
+```
+
+**Compare to Types Table**
+
+```{r}
+#Look at the Types table: some columns have one code, some have two.
+Types %>% 
+  distinct()
+```
+
+**Chart Crimes**
+
+```{r}
+SF %>% 
+  count(crime_cleaned) %>% 
+  filter(!crime_cleaned =="") %>% 
+  filter(n > 30) %>% 
+  ggplot(aes(x = reorder(crime_cleaned, n), y = n, fill=n)) + 
+  geom_bar(stat = "identity", show.legend = FALSE) +
+  coord_flip() +    #this makes it a horizontal bar chart instead of vertical
+  labs(title = "Types of Complaints in 311 Calls", 
+       subtitle = "SF PD Service Call Data, 3/2016-11/2019",
+       caption = "Graphic by Wells",
+       y="Types of Complaints",
+       x="Action")
+```
+
+**Arrest Trend: What is the trend for arrests over the time period?**
+
+Process dates using lubidate
+
+```{r}
+SF <- SF %>% 
+  mutate(yearmo = format(call_date2, "%Y-%m"))
+
+head(SF$yearmo)
+```
+
+```{r}
+SF %>% 
+  filter(grepl("ARR", disposition)) %>%
+  count(yearmo) %>% 
+  group_by(yearmo) %>% 
+  ggplot(aes(x = yearmo, y = n, fill=n)) +
+  geom_bar(stat = "identity", show.legend = FALSE) +
+  geom_smooth(method = lm, se=FALSE, color = "red") +
+  theme(axis.text.x = element_text(angle=90)) +
+  #Changes angle of x axis labels
+  #coord_flip() +    #this makes it a horizontal bar chart instead of vertical
+  labs(title = "Arrest Trends on Homeless Calls in San Francisco", 
+       subtitle = "Arrests Based on SF PD Service Call Data by Month 2016-2019", #a typo here, it should be 2016-2019
+       caption = "Graphic by Wells",
+       y="Number of Calls",
+       x="Year")
+
+#i don't think there is a super clear trend for arrests over the time period as there are several peaks and troughs in the distribution. The highest number of calls that ended up with arrest happened in 2016-05.
+```
+
+**Hours when people complain?**
+
+```{r}
+#format to hours
+SF$date_time <- mdy_hm(SF$call_date_time)
+SF$hour <- hour(SF$date_time)
+SF %>% 
+  count(hour) %>% 
+  group_by(hour) %>% 
+  ggplot(aes(x = hour, y = n, fill=n)) +
+  geom_bar(stat = "identity", show.legend = FALSE) +
+  theme(axis.text.x = element_text(angle=0)) +
+  #Changes angle of x axis labels
+  #coord_flip() +    #this makes it a horizontal bar chart instead of vertical
+  labs(title = "Hours of Homeless Calls, San Francisco", 
+       subtitle = "SF PD Service Call Data by Month 2017-2019",
+       caption = "Graphic by Wells",
+       y="Number of Calls",
+       x="Hour")  
+#people frequently complained in morning time between 7-10 am.
+```
+
+### Your Turn
+
+```{r}
+#Find out when nothing happened with the officer's investigation.
+#A table filtering the dispositions column to show "no disposition" or "gone on arrival"
+unique(SF$disposition1)
+
+#by month-year
+SF %>% 
+  filter(grepl("No_Dispo|Gone", disposition1)) %>%
+  count(yearmo) %>% 
+  group_by(yearmo) %>% 
+  ggplot(aes(x = yearmo, y = n, fill=n)) +
+  geom_bar(stat = "identity", show.legend = FALSE) +
+  geom_smooth(method = lm, se=FALSE, color = "red") +
+  theme(axis.text.x = element_text(angle=90)) +
+  #Changes angle of x axis labels
+  #coord_flip() +    #this makes it a horizontal bar chart instead of vertical
+  labs(title = "When Nothing Happened on Homeless Calls in San Francisco", 
+       subtitle = "Gone or No Disposition Based on SF PD Service Call Data by Month 2016-2019", 
+       caption = "Graphic by Zirong",
+       y="Number of Calls",
+       x="Year")
+#Cases ending with no disposition or "gone on arrival" were much more frequent before May 2018 than after, peaking in May 2016. 
+
+#by hour
+SF %>% 
+  filter(grepl("No_Dispo|Gone", disposition1)) %>%
+  count(hour) %>% 
+  group_by(hour) %>% 
+  ggplot(aes(x = hour, y = n, fill=n)) +
+  geom_bar(stat = "identity", show.legend = FALSE) +
+  theme(axis.text.x = element_text(angle=0)) +
+  #Changes angle of x axis labels
+  #coord_flip() +    #this makes it a horizontal bar chart instead of vertical
+  labs(title = "Hours When Nothing Happened on Homeless Calls, San Francisco", 
+       subtitle = "SF PD Service Call Data by Month 2017-2019",
+       caption = "Graphic by Zirong",
+       y="Number of Calls",
+       x="Hour")  
+#Cases ending with no disposition or "gone on arrival" were much more frequent in morning time than others, peaking in 7-8 am. 
+
+```
+
+```{r}
+#**Serious Actions**: Create a table with the serious actions including citations and arrests police took in the dispositions  
+
+#Arrest, Cited, Criminal Activation, SF Fire Dept Medical Staff engaged
+
+unique(SF$disposition1)
+
+SF %>%
+  filter(grepl("Arrest|Cited|Criminal_Activation|Medical_staff_engaged", disposition1)) %>%
+  count(disposition1) %>%
+  arrange(desc(n))
+
+```
+
+```{r}
+#Chart the number of calls by year and month
+
+SF %>% 
+  filter(grepl("Arrest|Cited|Criminal_Activation|Medical_staff_engaged", disposition1)) %>%
+  count(yearmo) %>% 
+  group_by(yearmo) %>% 
+  ggplot(aes(x = yearmo, y = n, fill=n)) +
+  geom_bar(stat = "identity", show.legend = FALSE) +
+  geom_smooth(method = lm, se=FALSE, color = "red") +
+  theme(axis.text.x = element_text(angle=90)) +
+  labs(title = "Serious Actions on Homeless Calls in San Francisco", 
+       subtitle = "Serious Actions Based on SF PD Service Call Data by Month 2016-2019", 
+       caption = "Graphic by Zirong",
+       y="Number of Calls",
+       x="")
+
+```
+
+```{r}
+#Build a summary table with the days of the week with the greatest number of calls. 
+#Create a graphic. Then build a table to see if the complaints vary by day
+
+#create week variable with labels  
+SF$week <- wday(SF$call_date2, label = TRUE, week_start = 1)
+
+#create the graphic
+SF %>% 
+  count(week) %>% 
+  group_by(week) %>% 
+  ggplot(aes(x = week, y = n, fill=n)) +
+  geom_bar(stat = "identity", show.legend = FALSE) +
+  theme(axis.text.x = element_text(angle=0)) +
+  #Changes angle of x axis labels
+  #coord_flip() +    #this makes it a horizontal bar chart instead of vertical
+  labs(title = "Days of the Week on Homeless Calls, San Francisco", 
+       subtitle = "SF PD Service Call Data by Month 2017-2019",
+       caption = "Graphic by Zirong",
+       y="Number of Calls",
+       x="Days of the Week") 
+
+#create the table
+SF %>%
+  group_by(week) %>%
+  count(week) %>%
+  arrange(desc(n))
+
+#The number of calls do vary by day, peaking on Wednesdays with 26473 calls in total.
+```
+
+**Super Bonus Nerd Zone**
+
+```{r}
+#Clean all of the Crime Columns
+#In the example above, we cleaned just the crime2 column. 
+#Now do the same with "crime3", "crime4" and join them together into a combined dataframe
+
+#clean crime 3:
+SF <- SF %>%
+   mutate(clean3 = case_when(
+     str_detect(crime3, '919') ~ "sit_lying",
+     str_detect(crime3, '915') ~ "homeless_complaint",
+     str_detect(crime3, '915s') ~ "homeless_complaint",
+     str_detect(crime3, '915x') ~ "homeless_complaint",  
+     str_detect(crime3, '909') ~ "interview",
+     str_detect(crime3, '902') ~ "aggress_solicit",
+     str_detect(crime3, '811') ~ "intoxicated",
+     str_detect(crime3, '601') ~ "trespasser",     
+     str_detect(crime3, "aggressive") ~ "aggressive",
+     str_detect(crime3, "chop shop") ~ "chop_shop",
+     str_detect(crime3, "dog") ~ "dog",    
+     str_detect(crime3, "drugs") ~ "drugs",    
+     str_detect(crime3, "homeless_complaint") ~ "homeless_complaint",
+     str_detect(crime3, "music") ~ "music",
+     str_detect(crime3, "panhandling") ~ "panhandling",
+     str_detect(crime3, "poss") ~ "possession",
+     str_detect(crime3, "sleep") ~ "sleep",
+     str_detect(crime3, "tent") ~ "tent",
+     TRUE ~ NA_character_
+   ))
+
+#clean crime 4:
+SF <- SF %>%
+   mutate(clean4 = case_when(
+     str_detect(crime4, '919') ~ "sit_lying",
+     str_detect(crime4, '915') ~ "homeless_complaint",
+     str_detect(crime4, '915s') ~ "homeless_complaint",
+     str_detect(crime4, '915x') ~ "homeless_complaint",  
+     str_detect(crime4, '909') ~ "interview",
+     str_detect(crime4, '902') ~ "aggress_solicit",
+     str_detect(crime4, '811') ~ "intoxicated",
+     str_detect(crime4, '601') ~ "trespasser",     
+     str_detect(crime4, "aggressive") ~ "aggressive",
+     str_detect(crime4, "chop shop") ~ "chop_shop",
+     str_detect(crime4, "dog") ~ "dog",    
+     str_detect(crime4, "drugs") ~ "drugs",    
+     str_detect(crime4, "homeless_complaint") ~ "homeless_complaint",
+     str_detect(crime4, "music") ~ "music",
+     str_detect(crime4, "panhandling") ~ "panhandling",
+     str_detect(crime4, "poss") ~ "possession",
+     str_detect(crime4, "sleep") ~ "sleep",
+     str_detect(crime4, "tent") ~ "tent",
+     TRUE ~ NA_character_
+   ))
+
+#put them together then we got crime_final in the dataframe
+SF <- SF %>%
+  mutate(crime_final = coalesce(na_if(crime_cleaned, ""), clean3, clean4, "other"))
+
+#check the results
+SF %>% count(crime_final, sort = TRUE)
+
+#AI discourse: I asked Claude to read and explain codes about crime 1, 2, 3, and 4 above so learn what's the difference and what I need to do.
+```
+
+<br>
+
+::: {style="text-align: center; color: #337DFF;"}
+--30--
+:::
