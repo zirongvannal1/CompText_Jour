@@ -1,0 +1,39 @@
+---
+title: "Basic R proficiency"
+author: "Zirong li"
+date: "2026-09-23"
+output: html_document
+---
+#Load libraries
+```{r}
+library(tidyverse)
+setwd("/Downloads")
+
+```
+
+#Import data
+```{r}
+mobdata <- read.csv("https://raw.githubusercontent.com/wellsdata/CompText_Jour/main/data/mob_analysis_data.csv")
+```
+
+#Describe the number of rows and columns in the dataset
+```{r}
+glimpse(mobdata)
+```
+
+#Create a table that displays a count of the top 15 newspaper entries
+```{r}
+mobdata %>%
+  count(Newspaper) %>%
+  arrange(desc(n)) %>%
+  head(15)
+```
+
+#Create a table that counts the different entries in the "keyword" column
+```{r}
+mobdata %>%
+  group_by(keyword) %>%
+  count(keyword) %>%
+  arrange(desc(n))
+```
+
