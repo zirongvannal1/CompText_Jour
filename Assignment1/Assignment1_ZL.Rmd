@@ -1,0 +1,92 @@
+---
+title: 'Assignment #1: R proficiency'
+author: "Zirong Li"
+date: "2026-10-03"
+output: html_document
+---
+
+# Load libraries
+
+```{r}
+library(tidyverse)
+library(janitor)
+library(rio)
+library(tidytext)
+```
+
+# Load the dataset
+
+```{r}
+his_black <- read_csv("https://raw.githubusercontent.com/wellsdata/CompText_Jour/main/data/blackindex_master.csv")
+
+write_csv(his_black, "data/blackindex_master.csv")
+
+glimpse(his_black)
+head(his_black)
+```
+
+# Rows and columns
+
+```{r}
+print(paste0("The dataset has ", nrow(his_black), " rows and ", ncol(his_black), " columns."))
+```
+
+# Table for top 20 newspaper cities
+
+```{r}
+his_black %>%
+  select(newspaper_city) %>%
+  filter(!is.na(newspaper_city)) %>% #filter out the NA rows
+  count(newspaper_city, sort = TRUE) %>%
+  slice_head(n = 20)
+
+#After removing the NA rows, there are only 12 distinct cities, so we got top 12 in the end.
+```
+
+# Table for all entries by year
+
+```{r}
+year_counts <- his_black %>%
+  select(year) %>%
+  filter(!is.na(year)) %>%
+  count(year)
+
+year_counts
+
+#Sort entries by count, highest first (not required, but good to know)
+his_black %>%
+  select(year) %>%
+  filter(!is.na(year)) %>%
+  count(year, sort = T)
+```
+
+# Chart for total entries by year
+
+```{r}
+ggplot(year_counts, aes(x = year, y = n, fill = n)) +
+  geom_col() +
+  scale_fill_gradient(low = "lightblue", high = "darkblue") +
+  labs(
+    title = "Black Press Articles by Year",
+    x = "Year",
+    y = "Number of articles",
+    fill = "Articles"
+  ) +
+  theme_minimal()
+```
+
+## Memo
+
+**Findings**
+
+This dataset has 1,803 rows and 30 columns. Each row appears to be one article from a historic Black newspaper, taken from ProQuest Historical Newspapers.
+
+Only 12 cities appear after removing missing values. Pittsburgh (151 articles) and Chicago (147) lead, followed by Atlanta (122), Norfolk (96), New York (71), and Philadelphia (65). Cleveland has 40 and Los Angeles has 16. The remaining cities have only one or two articles each. The city counts add up to 714, so about 1,089 rows (around 60%) have no city listed.
+
+The data covers 106 different years, starting in 1850 and ending in 2002. Coverage across years is uneven. For example, no articles appear between 1859 and 1871, and only a few appear after 1960. Most articles fall between 1890 and 1960. The peak is 1920 with 127 articles, followed by 1919 (108) and 1946 (92). Other high years are 1934 (65), 1918 (64), and 1942 (52). So there are two main clusters: 1918 to 1920, and the 1940s. 
+
+**Flaws and questions**
+
+1.  The missing city values are a big problem. The city rankings could change if those rows were not NA.
+
+2.  It is not clear how these articles were retrieved and selected, which makes it hard to interpret the results with confidence. For example, why are 1918 to 1920 and the 1940s so high? My guess is that they match real events, such as the racial violence of 1919 and World War II, but they may also reflect which papers were collected. I need more background about this dataset to tell.
