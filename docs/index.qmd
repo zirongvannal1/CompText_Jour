@@ -7,6 +7,84 @@ format:
     theme: cosmo
 ---
 
+
+# load the package
+
+```{r}
+library(tidyverse)
+library(sentimentr)
+library(tidyr)
+```
+
+# Import the data
+
+```{r}
+#I used the body text only (cleaned version)
+BodyText <- read_csv("100pilot_body_text.csv")
+
+BodyText
+
+```
+# Part one
+
+## 1. Split into sentences and calculate sentiment at the sentence level
+
+```{r}
+sentence_sentiment <- BodyText %>%
+  select(id, sentence) %>%
+  get_sentences() %>%
+  sentiment_by(by = c("id")) # Summarizes back to row/document level if desired
+#Here it summarized back to article level
+
+sentence_sentiment
+```
+
+## View sentence-by-sentence detailed breakdown
+```{r}
+detailed_sentences <- BodyText %>%
+  select(id, sentence) %>%
+  get_sentences() %>%
+  sentiment()
+
+detailed_sentences
+```
+
+## Look at the data distribution
+
+```{r}
+# sentence level (n = 4,794)
+summary(detailed_sentences$sentiment)
+sd(detailed_sentences$sentiment)
+
+# article level (n = 100)
+summary(sentence_sentiment$ave_sentiment)
+sd(sentence_sentiment$ave_sentiment)
+```
+
+## Put the scores in context
+```{r}
+#sentiment score for sentence level
+print(paste0(
+  "At the sentence level (n = ", nrow(detailed_sentences),
+  "), the minimum sentiment score was ", round(min(detailed_sentences$sentiment), 3),
+  ", the maximum was ", round(max(detailed_sentences$sentiment), 3),
+  ", the median was ", round(median(detailed_sentences$sentiment), 3),
+  ", and the standard deviation was ", round(sd(detailed_sentences$sentiment), 3), "."
+))
+
+#sentiment score for article level
+print(paste0(
+  "At the article level (n = ", nrow(sentence_sentiment),
+  "), the minimum average sentiment was ", round(min(sentence_sentiment$ave_sentiment), 3),
+  ", the maximum was ", round(max(sentence_sentiment$ave_sentiment), 3),
+  ", the median was ", round(median(sentence_sentiment$ave_sentiment), 3),
+  ", and the standard deviation was ", round(sd(sentence_sentiment$ave_sentiment), 3), "."
+))
+        
+```
+
+
+
 # Hosting a GitHub Page - R Cheat Sheet
 
 This exercise will allow you to create a basic web page which will be required for the Investigate Your Community final project option.
