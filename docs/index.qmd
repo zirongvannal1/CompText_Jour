@@ -11,6 +11,7 @@ format:
 # load the package
 
 ```{r}
+#| include: false
 library(tidyverse)
 library(sentimentr)
 library(tidyr)
@@ -19,6 +20,8 @@ library(tidyr)
 # Import the data
 
 ```{r}
+#| message: false
+#| warning: false
 #I used the body text only (cleaned version)
 BodyText <- read_csv("100pilot_body_text.csv")
 
