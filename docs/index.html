@@ -6,8 +6,8 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="Rob Wells">
-<meta name="dcterms.date" content="2026-06-01">
+<meta name="author" content="Zirong Li">
+<meta name="dcterms.date" content="2026-11-18">
 
 <title>Hosting a GitHub Page</title>
 <style>
@@ -99,14 +99,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Author</div>
     <div class="quarto-title-meta-contents">
-             <p>Rob Wells </p>
+             <p>Zirong Li </p>
           </div>
   </div>
     
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">June 1, 2026</p>
+      <p class="date">November 18, 2026</p>
     </div>
   </div>
   
@@ -118,406 +118,168 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="load-the-package" class="level1">
-<h1>load the package</h1>
+<p>#load tidyverse, janitor, rio</p>
+<p>#Import your data</p>
+<section id="clean-names" class="level1">
+<h1>Clean names</h1>
 </section>
-<section id="import-the-data" class="level1">
-<h1>Import the data</h1>
+<section id="check-data-types" class="level1">
+<h1>check data types</h1>
+<p>#clean up the data, as there are many empty and useless columns</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">#I used the body text only (cleaned version)</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>BodyText <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"100pilot_body_text.csv"</span>)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>BodyText</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>meta100 <span class="ot">&lt;-</span> data <span class="sc">|&gt;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute</span>(</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">id          =</span> <span class="fu">sprintf</span>(<span class="st">"A%03d"</span>, <span class="fu">row_number</span>()),</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">title       =</span> <span class="fu">str_squish</span>(title),</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">date        =</span> <span class="fu">as_date</span>(published_date),</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">publication =</span> <span class="fu">str_squish</span>(publication_4),</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">pub_type    =</span> <span class="fu">str_squish</span>(publication_type_5),</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">word_count  =</span> <span class="fu">as.integer</span>(word_count),</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">section     =</span> <span class="fu">str_squish</span>(section),</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">byline      =</span> <span class="fu">str_squish</span>(byline),</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">company_tag =</span> <span class="fu">str_squish</span>(company),</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">hlead       =</span> <span class="fu">str_squish</span>(hlead)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(meta100)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 2,493 × 17
-    ...1 filename     sentence     x id    title date       publication pub_type
-   &lt;dbl&gt; &lt;chr&gt;        &lt;chr&gt;    &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt; &lt;date&gt;     &lt;chr&gt;       &lt;chr&gt;   
- 1     1 ChatGPT may… "ChatGP…     1 A001  Chat… 2023-04-28 CNN Wire    News    
- 2     2 ChatGPT may… "\"Whil…     1 A001  Chat… 2023-04-28 CNN Wire    News    
- 3     3 ChatGPT may… "Still,…     1 A001  Chat… 2023-04-28 CNN Wire    News    
- 4     4 ChatGPT may… "A pane…     1 A001  Chat… 2023-04-28 CNN Wire    News    
- 5     5 ChatGPT may… "Respon…     1 A001  Chat… 2023-04-28 CNN Wire    News    
- 6     6 ChatGPT may… "More t…     1 A001  Chat… 2023-04-28 CNN Wire    News    
- 7     7 ChatGPT may… "On ave…     1 A001  Chat… 2023-04-28 CNN Wire    News    
- 8     8 ChatGPT may… "In one…     1 A001  Chat… 2023-04-28 CNN Wire    News    
- 9     9 ChatGPT may… "As in …     1 A001  Chat… 2023-04-28 CNN Wire    News    
-10    10 ChatGPT may… "\"With…     1 A001  Chat… 2023-04-28 CNN Wire    News    
-# ℹ 2,483 more rows
-# ℹ 8 more variables: word_count &lt;dbl&gt;, section &lt;chr&gt;, byline &lt;chr&gt;,
-#   company_tag &lt;chr&gt;, hlead &lt;chr&gt;, year &lt;dbl&gt;, index &lt;chr&gt;, filepath &lt;chr&gt;</code></pre>
+<pre><code># A tibble: 6 × 10
+  id    title          date       publication pub_type word_count section byline
+  &lt;chr&gt; &lt;chr&gt;          &lt;date&gt;     &lt;chr&gt;       &lt;chr&gt;         &lt;int&gt; &lt;chr&gt;   &lt;chr&gt; 
+1 A001  ChatGPT may h… 2023-04-28 CNN Wire    News            860 &lt;NA&gt;    By De…
+2 A002  Google flexes… 2023-03-15 Axios       News           1104 &lt;NA&gt;    Jenni…
+3 A003  I asked ChatG… 2023-07-18 Fastcompan… News           1295 &lt;NA&gt;    Bobbi…
+4 A004  The AI Arms R… 2023-02-27 Time        News           2855 MACHIN… Andre…
+5 A005  What Role Cou… 2023-03-15 MedCity Ne… News           1137 HEALTH… Derk …
+6 A006  Artificial in… 2023-05-09 CNN Wire    News            999 &lt;NA&gt;    By Al…
+# ℹ 2 more variables: company_tag &lt;chr&gt;, hlead &lt;chr&gt;</code></pre>
 </div>
 </div>
-</section>
-<section id="part-one" class="level1">
-<h1>Part one</h1>
-<section id="split-into-sentences-and-calculate-sentiment-at-the-sentence-level" class="level2">
-<h2 class="anchored" data-anchor-id="split-into-sentences-and-calculate-sentiment-at-the-sentence-level">1. Split into sentences and calculate sentiment at the sentence level</h2>
+<p>#save the new metadata csv</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>sentence_sentiment <span class="ot">&lt;-</span> BodyText <span class="sc">%&gt;%</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(id, sentence) <span class="sc">%&gt;%</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">get_sentences</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sentiment_by</span>(<span class="at">by =</span> <span class="fu">c</span>(<span class="st">"id"</span>)) <span class="co"># Summarizes back to row/document level if desired</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">#Here it summarized back to article level</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>sentence_sentiment</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Key: &lt;id&gt;
-         id word_count        sd ave_sentiment
-     &lt;char&gt;      &lt;int&gt;     &lt;num&gt;         &lt;num&gt;
-  1:   A001        790 0.3333331   0.201458047
-  2:   A002        819 0.3406896   0.243190083
-  3:   A003       1326 0.3401588   0.193883904
-  4:   A004       2713 0.3034850   0.106987370
-  5:   A005       1111 0.3178514   0.121517084
-  6:   A006        941 0.3510360  -0.099439176
-  7:   A007        274 0.2720826   0.296668681
-  8:   A008       1171 0.2425513   0.226464172
-  9:   A009        415 0.2590431   0.201098055
- 10:   A010        634 0.2252331   0.162050441
- 11:   A011       1430 0.3517945   0.168990337
- 12:   A012        544 0.3792405   0.160284006
- 13:   A013        627 0.3388345   0.015151396
- 14:   A014        836 0.2672687   0.100096957
- 15:   A015        894 0.3062507   0.296468413
- 16:   A016        988 0.3370366   0.378287079
- 17:   A017        756 0.3303205   0.248327395
- 18:   A018        797 0.3520549   0.182164475
- 19:   A019        681 0.2293426   0.213043144
- 20:   A020        572 0.2653459   0.042417809
- 21:   A021       1226 0.3388396   0.206400522
- 22:   A022        635 0.3448499   0.260882311
- 23:   A023       1132 0.2299776   0.172038466
- 24:   A024       1059 0.2872465   0.133357417
- 25:   A025        922 0.2892079   0.006123615
- 26:   A026       1245 0.3295984   0.152423499
- 27:   A027       1456 0.3212504   0.228265180
- 28:   A028        508 0.3570425   0.233912109
- 29:   A029       1115 0.2976140   0.187519921
- 30:   A030       1152 0.2310326   0.046116312
- 31:   A031       1435 0.2393582   0.262941506
- 32:   A032       1176 0.2480295   0.147051785
- 33:   A033        602 0.2736066   0.107726665
- 34:   A034        771 0.2478407   0.054878940
- 35:   A035       1553 0.2786636   0.082539109
- 36:   A036        443 0.2781798   0.051855063
- 37:   A037        678 0.4179889   0.304962428
- 38:   A038       1177 0.2061250   0.142709031
- 39:   A039        451 0.2438879   0.261127400
- 40:   A040        393 0.1710151   0.231240643
- 41:   A041        944 0.2644651   0.186629344
- 42:   A042       1507 0.2690849   0.127400474
- 43:   A043        346 0.3881735   0.088476754
- 44:   A044        412 0.2693185   0.125464403
- 45:   A045        687 0.2908980  -0.038016265
- 46:   A046        733 0.2969086   0.195508993
- 47:   A047        879 0.2411608  -0.006259418
- 48:   A048        808 0.2546667   0.175539277
- 49:   A049       1428 0.2569998  -0.031288048
- 50:   A050        813 0.2442584  -0.134726521
- 51:   A051       1175 0.3897382   0.213659343
- 52:   A052       1424 0.3497680  -0.015726697
- 53:   A053        614 0.3051647  -0.013560288
- 54:   A054        433 0.1504201   0.134862287
- 55:   A055        577 0.2289857  -0.023230284
- 56:   A056        476 0.2141896   0.221974503
- 57:   A057       1239 0.3725749   0.059703560
- 58:   A058       1512 0.3137947  -0.019129333
- 59:   A059       1629 0.2402029   0.174215759
- 60:   A060       1091 0.3013482   0.155218084
- 61:   A061       1921 0.2657533   0.227080347
- 62:   A062        906 0.2680687  -0.077437877
- 63:   A063        655 0.3581137   0.018995263
- 64:   A064       1279 0.2170453   0.123482763
- 65:   A065        578 0.3613279   0.292332674
- 66:   A066       2864 0.3228959   0.101736357
- 67:   A067       1288 0.2583594   0.200695231
- 68:   A068        698 0.3127552  -0.007904806
- 69:   A069       1108 0.2602200   0.159819243
- 70:   A070        717 0.3229616   0.207278584
- 71:   A071        597 0.3183467   0.112321484
- 72:   A072       1293 0.2516614   0.279982685
- 73:   A073        817 0.2371501   0.167998320
- 74:   A074        947 0.2568586   0.116676963
- 75:   A075        629 0.2619117   0.175402082
- 76:   A076        619 0.2939242   0.278883273
- 77:   A077        913 0.3654483   0.230764356
- 78:   A078        586 0.2928438   0.140899124
- 79:   A079        814 0.2546293   0.090673726
- 80:   A080       1010 0.2988831   0.222919155
- 81:   A081        677 0.2850768   0.143959802
- 82:   A082       1374 0.3438696  -0.024351541
- 83:   A083        850 0.2234019   0.097931742
- 84:   A084        370 0.1969074   0.105396202
- 85:   A085       1029 0.3172363   0.140250390
- 86:   A086        874 0.3210658   0.131641805
- 87:   A087        625 0.2749912  -0.036516518
- 88:   A088       1272 0.2354645   0.115284572
- 89:   A089        693 0.3858406   0.216169481
- 90:   A090        660 0.2198762   0.123626164
- 91:   A091        487 0.2830032   0.028790662
- 92:   A092        871 0.2758645   0.209855172
- 93:   A093        821 0.2594612   0.057139285
- 94:   A094        383 0.1721663   0.074644989
- 95:   A095       1077 0.2344030   0.129484862
- 96:   A096        669 0.2473362   0.336847814
- 97:   A097       1461 0.3420209  -0.044144437
- 98:   A098       1310 0.1669485   0.067870489
- 99:   A099       1742 0.2187530   0.026049096
-100:   A100        627 0.3172863   0.267414641
-         id word_count        sd ave_sentiment</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(meta100, <span class="st">"pilot100_metadata.csv"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</div>
+<p>Next Steps: Count years, and create a ggplot</p>
 </section>
-<section id="view-sentence-by-sentence-detailed-breakdown" class="level2">
-<h2 class="anchored" data-anchor-id="view-sentence-by-sentence-detailed-breakdown">View sentence-by-sentence detailed breakdown</h2>
+<section id="transform-date-into-years.-see-tutorial" class="level1">
+<h1>Transform date into years. See tutorial</h1>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>detailed_sentences <span class="ot">&lt;-</span> BodyText <span class="sc">%&gt;%</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(id, sentence) <span class="sc">%&gt;%</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">get_sentences</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sentiment</span>()</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>detailed_sentences</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>          id
-      &lt;char&gt;
-   1:   A001
-   2:   A001
-   3:   A001
-   4:   A001
-   5:   A001
-  ---       
-4790:   A100
-4791:   A100
-4792:   A100
-4793:   A100
-4794:   A100
-                                                                                                                                                                                                                                                             sentence
-                                                                                                                                                                                                                                                      &lt;get_sentences&gt;
-   1:                                                       ChatGPT can be a useful tool for patients who are seeking medical information and guidance, but the artificial intelligence tool can't fully replace the value of a human physician -- it says so itself.
-   2: "While I am a language model that has been trained on a vast amount of information, I am not a licensed medical professional and I am not capable of providing medical diagnoses, treatments, or advice," the chatbot wrote in response to a question from CNN.
-   3:                                                                                                         Still, new research published this week suggests that physicians may have some things to learn from the chatbot when it comes to patient communication.
-   4:                             A panel of licensed health care professionals assessed responses to about 200 different medical questions posed to a public online forum, including patient inquiries about medical diagnoses, need for medical attention and more.
-   5:                                                                                            Responses from ChatGPT were "preferred over physician responses and rated significantly higher for both quality and empathy," according to a study published Friday.
-  ---                                                                                                                                                                                                                                                                
-4790:                                                                                  Home services, like dental firms, are becoming a favorite of PE firms as well, where they can apply operational rigor to fragmented shops, to drive rapid revenue turnarounds.
-4791:                                                                                      In a world saturated with digital content and ephemeral technology, they recognize that competence in the physical world is highly important to driving the digital world.
-4792:                                                                                                                                                               The ability to build, diagnose, fix and maintain essential infrastructure is not just trade work.
-4793:                                                                                                                                                                                        It is highly lucrative, deeply secure, and now technologically advanced.
-4794:                                                                                                                                           Driving better customer experiences and growing revenue are areas where AI can help but not replace their core value.
-      element_id sentence_id word_count   sentiment
-           &lt;int&gt;       &lt;int&gt;      &lt;int&gt;       &lt;num&gt;
-   1:          1           1         33 -0.01087985
-   2:          2           1         45  0.52771204
-   3:          3           1         24  0.42866070
-   4:          4           1         32  0.40658640
-   5:          5           1         23  0.83197251
-  ---                                              
-4790:       2492           1         28  0.41576092
-4791:       2492           2         26  0.55893099
-4792:       2493           1         15  0.24528895
-4793:       2493           2         10  1.09098579
-4794:       2493           3         19  0.36706517</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>meta100 <span class="ot">&lt;-</span> meta100 <span class="sc">|&gt;</span> </span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">year =</span> <span class="fu">year</span>(date))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</div>
-</section>
-<section id="look-at-the-data-distribution" class="level2">
-<h2 class="anchored" data-anchor-id="look-at-the-data-distribution">Look at the data distribution</h2>
+<p>#publication</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># sentence level (n = 4,794)</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(detailed_sentences<span class="sc">$</span>sentiment)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>meta100 <span class="sc">|&gt;</span> </span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(publication) <span class="sc">|&gt;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(n))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>    Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
--1.51046 -0.01287  0.07559  0.11186  0.27954  2.12605 </code></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sd</span>(detailed_sentences<span class="sc">$</span>sentiment)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.3003451</code></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># article level (n = 100)</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(sentence_sentiment<span class="sc">$</span>ave_sentiment)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>    Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
--0.13473  0.06583  0.14180  0.13540  0.21065  0.37829 </code></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sd</span>(sentence_sentiment<span class="sc">$</span>ave_sentiment)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.1036852</code></pre>
+<pre><code># A tibble: 31 × 2
+   publication                          n
+   &lt;chr&gt;                            &lt;int&gt;
+ 1 Healthcare Dive                      9
+ 2 Newsweek.com                         8
+ 3 CNN Wire                             7
+ 4 USNEWS.com                           7
+ 5 Inc.com                              6
+ 6 The Conversation - United States     6
+ 7 USA Today Online                     6
+ 8 Business Insider                     4
+ 9 MedCity News                         4
+10 The Associated Press                 4
+# ℹ 21 more rows</code></pre>
 </div>
 </div>
-</section>
-<section id="put-the-scores-in-context" class="level2">
-<h2 class="anchored" data-anchor-id="put-the-scores-in-context">Put the scores in context</h2>
+<p>#filter on length</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">#sentiment score for sentence level</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">paste0</span>(</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"At the sentence level (n = "</span>, <span class="fu">nrow</span>(detailed_sentences),</span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"), the minimum sentiment score was "</span>, <span class="fu">round</span>(<span class="fu">min</span>(detailed_sentences<span class="sc">$</span>sentiment), <span class="dv">3</span>),</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">", the maximum was "</span>, <span class="fu">round</span>(<span class="fu">max</span>(detailed_sentences<span class="sc">$</span>sentiment), <span class="dv">3</span>),</span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">", the median was "</span>, <span class="fu">round</span>(<span class="fu">median</span>(detailed_sentences<span class="sc">$</span>sentiment), <span class="dv">3</span>),</span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">", and the standard deviation was "</span>, <span class="fu">round</span>(<span class="fu">sd</span>(detailed_sentences<span class="sc">$</span>sentiment), <span class="dv">3</span>), <span class="st">"."</span></span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>meta100 <span class="sc">|&gt;</span> </span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">length =</span> <span class="fu">as.numeric</span>(word_count)) <span class="sc">|&gt;</span> </span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(length <span class="sc">&gt;</span> <span class="dv">800</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] "At the sentence level (n = 4794), the minimum sentiment score was -1.51, the maximum was 2.126, the median was 0.076, and the standard deviation was 0.3."</code></pre>
+<pre><code># A tibble: 60 × 12
+   id    title         date       publication pub_type word_count section byline
+   &lt;chr&gt; &lt;chr&gt;         &lt;date&gt;     &lt;chr&gt;       &lt;chr&gt;         &lt;int&gt; &lt;chr&gt;   &lt;chr&gt; 
+ 1 A001  ChatGPT may … 2023-04-28 CNN Wire    News            860 &lt;NA&gt;    By De…
+ 2 A002  Google flexe… 2023-03-15 Axios       News           1104 &lt;NA&gt;    Jenni…
+ 3 A003  I asked Chat… 2023-07-18 Fastcompan… News           1295 &lt;NA&gt;    Bobbi…
+ 4 A004  The AI Arms … 2023-02-27 Time        News           2855 MACHIN… Andre…
+ 5 A005  What Role Co… 2023-03-15 MedCity Ne… News           1137 HEALTH… Derk …
+ 6 A006  Artificial i… 2023-05-09 CNN Wire    News            999 &lt;NA&gt;    By Al…
+ 7 A008  Generative A… 2023-10-16 Modern Hea… News           1282 Pg. 8;… Gabri…
+ 8 A011  The Rise of … 2023-02-27 MedCity Ne… News           1617 HEALTH… Tomer…
+ 9 A014  ChatGPT can … 2023-03-30 The San Fr… News            878 A;Pg. … Bibi …
+10 A015  AI will even… 2023-09-14 San Franci… News            938 &lt;NA&gt;    Pedro…
+# ℹ 50 more rows
+# ℹ 4 more variables: company_tag &lt;chr&gt;, hlead &lt;chr&gt;, year &lt;dbl&gt;, length &lt;dbl&gt;</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co">#sentiment score for article level</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">paste0</span>(</span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"At the article level (n = "</span>, <span class="fu">nrow</span>(sentence_sentiment),</span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"), the minimum average sentiment was "</span>, <span class="fu">round</span>(<span class="fu">min</span>(sentence_sentiment<span class="sc">$</span>ave_sentiment), <span class="dv">3</span>),</span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">", the maximum was "</span>, <span class="fu">round</span>(<span class="fu">max</span>(sentence_sentiment<span class="sc">$</span>ave_sentiment), <span class="dv">3</span>),</span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">", the median was "</span>, <span class="fu">round</span>(<span class="fu">median</span>(sentence_sentiment<span class="sc">$</span>ave_sentiment), <span class="dv">3</span>),</span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">", and the standard deviation was "</span>, <span class="fu">round</span>(<span class="fu">sd</span>(sentence_sentiment<span class="sc">$</span>ave_sentiment), <span class="dv">3</span>), <span class="st">"."</span></span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] "At the article level (n = 100), the minimum average sentiment was -0.135, the maximum was 0.378, the median was 0.142, and the standard deviation was 0.104."</code></pre>
-</div>
 </div>
 </section>
-</section>
-<section id="hosting-a-github-page---r-cheat-sheet" class="level1">
-<h1>Hosting a GitHub Page - R Cheat Sheet</h1>
-<p>This exercise will allow you to create a basic web page which will be required for the Investigate Your Community final project option.</p>
-<p>For this exercise, you will create a page with your one paragraph story idea. You will then host it on your GitHub page.</p>
-<section id="styled-text" class="level2">
-<h2 class="anchored" data-anchor-id="styled-text">Styled Text</h2>
-<p>At the core, QMD files are text files, and they allow you to use a very lightweight “markup” language to style text, similar to html, but much less fussy.</p>
-<p>Outside of the codeblocks (the gray sections where we write code), we can style any text using standard markdown styling.</p>
-<p>This is a nice guide to styling text with markdown: <a href="https://quarto.org/docs/authoring/markdown-basics.html">Markdown guide</a></p>
-<p>We can create headings similar to html’s h1 to h6 with hashtags.</p>
-<section id="this-is-an-h5" class="level5">
-<h5 class="anchored" data-anchor-id="this-is-an-h5">This is an h5</h5>
-<p>We can create links, like this: <a href="https://google.com">google</a></p>
-<p>We can <strong>bold</strong> or <em>italic</em> text.</p>
-<p>We can create bulleted lists.</p>
-<ul>
-<li>bullet one</li>
-<li>bullet two</li>
-<li>bullet three</li>
-</ul>
-</section>
-</section>
-<section id="code-blocks" class="level2">
-<h2 class="anchored" data-anchor-id="code-blocks">Code blocks</h2>
-<p>We can also add special code inside of code blocks – the gray sections where we write code – that control how they render in our html document. These output options let us do things like:</p>
-<ul>
-<li>Show or hide the code when we render our html document (echo: true or false)</li>
-<li>Prevent the code from actually running when we render our html document (eval: true or false)</li>
-<li>Hide warnings from outputing when we render our html document (warning: true or false)</li>
-</ul>
-<p>There’s a <a href="https://quarto.org/docs/computations/execution-options.html#output-options">full guide here</a>.</p>
-<p>The code below, for example, will output the text inside the print statement when rendered to html, but the actual code – the print() function – will be hidden.</p>
-</section>
-<section id="create-your-website" class="level2">
-<h2 class="anchored" data-anchor-id="create-your-website">Create your website</h2>
-<p>In place of these instructions, you will paste your project one paragraph story idea into this document and any code you’ve developed so far.</p>
-<p>You will need to load libraries and data because rendering a page requires a full R session to execute on the code.</p>
-<p>First, create H1 headers</p>
-<p><strong>For example:</strong></p>
-</section>
-</section>
-<section id="income-and-vacancies-of-baltimore-neighborhoods-2020" class="level1">
-<h1>Income and Vacancies of Baltimore Neighborhoods 2020</h1>
-<section id="looking-at-wealth-inequality-in-charm-city" class="level2">
-<h2 class="anchored" data-anchor-id="looking-at-wealth-inequality-in-charm-city">Looking at wealth inequality in Charm City</h2>
+<section id="create-a-ggplot" class="level1">
+<h1>Create a ggplot</h1>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># You will write your code in chunks but not execute the data. Use {r eval=FALSE, include=TRUE} in the header so the page will render without running the actual code.</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>income_vacancy <span class="sc">%&gt;%</span> </span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> community)) <span class="sc">+</span></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">y=</span>income_2020), <span class="at">color =</span> <span class="st">"#64D197"</span>, <span class="at">stroke=</span><span class="dv">5</span>) <span class="sc">+</span></span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">y=</span>vacant_2020<span class="sc">*</span><span class="dv">1000</span>), <span class="at">stroke=</span><span class="dv">5</span>, <span class="at">color =</span> <span class="st">"#FB8AE3"</span>) <span class="sc">+</span></span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(</span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">name =</span> <span class="st">"2020 Income (Green)"</span>, <span class="at">limits=</span><span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">62000</span>), <span class="at">labels=</span>scales<span class="sc">::</span><span class="fu">dollar_format</span>(),</span>
-<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">sec.axis =</span> <span class="fu">sec_axis</span>(<span class="sc">~</span>.<span class="sc">/</span><span class="dv">60000</span>, <span class="at">name=</span><span class="st">"2020 Percent Vacancies (Red)"</span>, <span class="at">labels =</span> scales<span class="sc">::</span>percent))<span class="sc">+</span></span>
-<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">#scale_y_continuous(labels = scales::percent) +</span></span>
-<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Income and Vacancies of Baltimore Neighborhoods 2020"</span>,</span>
-<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Community"</span>,</span>
-<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">"source: BNIA Data - By: Parker Leipzig and Rob Wells"</span></span>
-<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>meta100 <span class="sc">|&gt;</span> </span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(year) <span class="sc">|&gt;</span> </span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>   <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> year, <span class="at">y =</span> n,</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>             <span class="at">fill =</span> n)) <span class="sc">+</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">position =</span> <span class="st">"dodge"</span>) <span class="sc">+</span> </span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"none"</span>) <span class="sc">+</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks=</span><span class="fu">c</span>(<span class="dv">2022</span><span class="sc">:</span><span class="dv">2026</span>)) <span class="sc">+</span> <span class="co">#fixes wonky x axis</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Years for News Discourse about AI as Health Source Research"</span>,</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">"Limited NexisUni Run"</span>,</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>       <span class="at">caption =</span> <span class="st">"Graphic by Rob Wells, 9-15-2026"</span>,</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">y=</span><span class="st">"Number of Articles"</span>,</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>       <span class="at">x=</span><span class="st">""</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="index_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
 </div>
-</section>
-<section id="set-up-for-hosting" class="level2">
-<h2 class="anchored" data-anchor-id="set-up-for-hosting">Set up for hosting</h2>
-<ul>
-<li>Create a new folder in your repository called “docs” (if one isn’t there already)</li>
-<li>Rename this document as “index.qmd”</li>
-<li>Move “index.qmd” into the “docs” folder</li>
-</ul>
-</section>
-<section id="render-this-document-as-an-html-page" class="level2">
-<h2 class="anchored" data-anchor-id="render-this-document-as-an-html-page">Render this document as an html page</h2>
-<ul>
-<li>Make sure this document is named “index.qmd” and is in the “docs” folder</li>
-<li>Click Render button. It will create an html version of this page, called “index.html”</li>
-<li>Use GitHub Desktop to push your files to your your github repository on the web.</li>
-<li>Access the URL from your Github repository.</li>
-</ul>
-</section>
-<section id="host-html-on-github" class="level2">
-<h2 class="anchored" data-anchor-id="host-html-on-github">Host html on GitHub</h2>
-<ul>
-<li>Go to your github repository on the web, such as https://github.com/djnf-data-2026/casey-mann</li>
-<li>Click on Settings on the top right.</li>
-<li>Scroll down to the Pages section of Settings.</li>
-<li>Change the Branch to /docs and click save.</li>
-</ul>
-<section id="to-see-your-file-hosted" class="level4">
-<h4 class="anchored" data-anchor-id="to-see-your-file-hosted">To see your file hosted:</h4>
-<ul>
-<li>Back to your GitHub repo on the web: such as https://github.com/djnf-data-2026/casey-mann</li>
-<li>Click on Settings, then Pages</li>
-<li>Under GitHub Pages, you should see “Your site is live at https://djnf-data-2026.github.io/casey-mann/”</li>
-<li>Click that URL</li>
-<li>If it works, email it to robwells@umd.edu</li>
-</ul>
-</section>
-</section>
-<section id="revel-in-your-nerd-powers" class="level2">
-<h2 class="anchored" data-anchor-id="revel-in-your-nerd-powers">REVEL IN YOUR NERD POWERS</h2>
-</section>
-</section>
-<section id="part-2-embedding-images" class="level1">
-<h1>Part 2: Embedding Images</h1>
-<ul>
-<li><p>create a folder in your repository’s main branch, call it images</p></li>
-<li><p>find any .jpeg, .jpg or .png file and insert it into that folder.</p></li>
-<li><p>In a QMD file, display the image as follows:</p></li>
-</ul>
-<p>#<img src="images/your_link_here.png" class="img-fluid" alt="CAPTION FOR YOUR PHOTO"></p>
-<p>#<img src="images/xl-refresher-grid_SHEETS.png" class="img-fluid" alt="CHATTER FOR YOUR chart"></p>
-<p>A more advanced technique controlling the width and height</p>
-<p>#<img src="images/xl-refresher-SHEETS_screen.png" class="img-fluid" style="width:100.0%" alt="Read the Screen"></p>
-<section id="embedding-code" class="level3">
-<h3 class="anchored" data-anchor-id="embedding-code">Embedding code</h3>
-<p>From a <strong>Datawrapper Map</strong></p>
-<iframe title="Small Business Reporting, Spring 2024" aria-label="Map" id="datawrapper-chart-z4bny" src="https://datawrapper.dwcdn.net/z4bny/5/" scrolling="no" frameborder="0" style="width: 0; min-width: 100% !important; border: none;" height="500" data-external="1">
-</iframe>
-<script type="text/javascript">!function(){"use strict";window.addEventListener("message",(function(a){if(void 0!==a.data["datawrapper-height"]){var e=document.querySelectorAll("iframe");for(var t in a.data["datawrapper-height"])for(var r=0;r<e.length;r++)if(e[r].contentWindow===a.source){var i=a.data["datawrapper-height"][t]+"px";e[r].style.height=i}}}))}();
-</script>
-</section>
-<section id="embedding-video" class="level2">
-<h2 class="anchored" data-anchor-id="embedding-video">Embedding video</h2>
-<section id="deep-nerd-video" class="level3">
-<h3 class="anchored" data-anchor-id="deep-nerd-video">Deep Nerd Video</h3>
-<div id="first_steps">
-<iframe width="560" height="315" src="https://www.youtube.com/embed/TNP_unReOpw?si=CQC3cG49TShkoJOG" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen="">
-</iframe>
 </div>
-</section>
-<div id="second_steps">
-<section id="a-great-lecture-on-structural-racism-in-journalism" class="level3">
-<h3 class="anchored" data-anchor-id="a-great-lecture-on-structural-racism-in-journalism">A great lecture on structural racism in journalism</h3>
-<iframe width="560" height="315" src="https://www.youtube.com/embed/DIDHbEZYFSc?si=a-KNzlQgoGjXD6VV" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen="">
-</iframe>
-</section>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">#I extracted evenly for each year, so group by year doesn't work for me</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p><strong>Now replace these two videos with something you selected.</strong></p>
-<p>The embed code is in the video share feature</p>
-</section>
-<section id="instructions-to-embed-a-gif" class="level2">
-<h2 class="anchored" data-anchor-id="instructions-to-embed-a-gif">Instructions to embed a gif</h2>
-<p>This is a very basic starter but it will get you to the finish line on Saturday. Good luck!</p>
-<p>–30–</p>
-</section>
+<p>#Count publications</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>meta100 <span class="sc">|&gt;</span> </span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(publication) <span class="sc">|&gt;</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(n))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 31 × 2
+   publication                          n
+   &lt;chr&gt;                            &lt;int&gt;
+ 1 Healthcare Dive                      9
+ 2 Newsweek.com                         8
+ 3 CNN Wire                             7
+ 4 USNEWS.com                           7
+ 5 Inc.com                              6
+ 6 The Conversation - United States     6
+ 7 USA Today Online                     6
+ 8 Business Insider                     4
+ 9 MedCity News                         4
+10 The Associated Press                 4
+# ℹ 21 more rows</code></pre>
+</div>
+</div>
+<p>#Visualize publications</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>meta100 <span class="sc">|&gt;</span> </span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(publication) <span class="sc">|&gt;</span> </span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>   <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> n, <span class="at">y =</span> <span class="fu">reorder</span>(publication, n), <span class="co">#change the direction of bars and set the order</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>             <span class="at">fill =</span> n)) <span class="sc">+</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">position =</span> <span class="st">"dodge"</span>) <span class="sc">+</span> </span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"none"</span>) <span class="sc">+</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Publications for News Discourse about AI as Health Source Research"</span>,</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">"Limited NexisUni Run"</span>,</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>       <span class="at">caption =</span> <span class="st">"Graphic by Rob Wells, 9-15-2026"</span>,</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>       <span class="at">y=</span><span class="st">"Number of Articles"</span>,</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">x=</span><span class="st">"Publications"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="index_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
 </section>
 
 </main>
